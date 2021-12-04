@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <msclr/marshal_cppstd.h>
 #include <FreeImagePlus.h>
-#include <sstream>
 
 #define generic GenericFromFreeTypeLibrary
 #include <ft2build.h>
@@ -37,6 +36,9 @@ Generator::Generator()
 	fontHeight = 22;
 	fileName = gcnew String("");
 	scale = 0.1;
+	r = true;
+	g = true; 
+	b = true;
 }
 
 Generator::~Generator()
@@ -124,19 +126,23 @@ List<String^>^ Generator::Data::get()
 
 	if (img.load(marshal_as<std::string>(FileName).c_str()))
 	{
+		auto family = marshal_as<std::string>(FontFamily);
+		auto style = marshal_as<std::string>(FontStyle);
+		auto charset = marshal_as<std::string>(Charset);
+
 		const auto maxSize = std::pair(640u, 480u);
-		const auto weights = Cpp::GetCharWeights(marshal_as<std::string>(FontFamily), marshal_as<std::string>(FontStyle), FontHeight, marshal_as<std::string>(Charset));
+		const auto weights = Cpp::GetCharWeights(family, style, FontHeight, charset);
+		auto aspect = Cpp::GetFontAspectRatio(family, style);
 
 		if (weights.size())
 		{
 			const auto maxBits = std::pow(2, sizeof(RGBQUAD::rgbRed) * CHAR_BIT);
 			const auto range = weights.rbegin()->first - weights.begin()->first;
-			auto cx = img.getWidth() * scale;
-			auto cy = img.getHeight() * scale;
+			auto cx = img.getWidth() * scale / aspect;
+			auto cy = img.getHeight() * scale * aspect;
 
-			std::wstringstream ss;
-			ss << L"Generator::Data: " << cx << L", " << cy << std::endl;
-			::OutputDebugString(ss.str().c_str()); // TODO: rem
+			auto width = img.getWidth(); // TODO: rem
+			auto height = img.getHeight();// TODO: rem
 
 			img.rescale((int)std::round(cx), (int)std::round(cy), FILTER_BOX);
 
@@ -150,7 +156,12 @@ List<String^>^ Generator::Data::get()
 
 					img.getPixelColor(x, y, &rgb);
 
-					double weight = ((rgb.rgbRed | rgb.rgbGreen | rgb.rgbBlue) / maxBits) * range;
+					double weight = ((
+						(r ? rgb.rgbRed : 0) | 
+						(g ? rgb.rgbGreen : 0) | 
+						(b ? rgb.rgbBlue : 0)
+						) / maxBits) * range;
+
 					auto low = weights.lower_bound(weight);
 					auto high = weights.upper_bound(weight);
 					auto iterator = (high == weights.cend()) ? low : (*low > *high ? low : high);
@@ -164,4 +175,40 @@ List<String^>^ Generator::Data::get()
 	}
 
 	return result;
+}
+
+bool Generator::R::get()
+{
+	return r;
+}
+
+void Generator::R::set(bool value)
+{
+	r = value;
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("R"));
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+}
+
+bool Generator::G::get()
+{
+	return g;
+}
+
+void Generator::G::set(bool value)
+{
+	g = value;
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("G"));
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+}
+
+bool Generator::B::get()
+{
+	return b;
+}
+
+void Generator::B::set(bool value)
+{
+	b = value;
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("B"));
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
 }

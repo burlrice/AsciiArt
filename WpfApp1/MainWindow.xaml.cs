@@ -32,7 +32,7 @@ namespace WpfApp1
             var fileName = string.Join("\\",
                 Assembly.GetExecutingAssembly().Location.
                 Split('\\').TakeWhile(s => s != "bin")
-                .Union(new List<string>() { "Starry night.png" }));
+                .Union(new List<string>() { "800px-ISO_C++_Logo.svg.png" }));
 
             InitializeComponent();
             Generator.FontFamily = Fonts.Where(f => f == "Courier New").FirstOrDefault();
@@ -60,18 +60,15 @@ namespace WpfApp1
         void ReloadImage(string fileName)
         {
             var img = new BitmapImage();
-            var size = new Size(640, 480);
+            var max = new Size(640, 480);
 
             img.BeginInit();
             img.UriSource = new Uri(fileName);
             img.EndInit();
 
-            var aspectRatio = img.PixelWidth / (double)img.PixelHeight;
-            var cx = Math.Min(img.PixelWidth, size.Width) / aspectRatio / img.PixelWidth;
-            var cy = Math.Min(img.PixelHeight, size.Height) / aspectRatio / img.PixelHeight;
+            var scale = Math.Max(max.Width / img.PixelWidth, max.Height / img.PixelHeight);
 
-            Image = new TransformedBitmap(img, new ScaleTransform(cx, cy));
-
+            Image = new TransformedBitmap(img, new ScaleTransform(scale, scale));
             Generator.FileName = fileName;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
         }

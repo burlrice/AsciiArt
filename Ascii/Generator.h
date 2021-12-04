@@ -21,6 +21,9 @@ namespace Ascii
 		property int FontHeight { int get(); void set(int); }
 		property String^ FileName { String^ get(); void set(String^); }
 		property double Scale { double get(); void set(double); }
+		property bool R { bool get(); void set(bool); }
+		property bool G { bool get(); void set(bool); }
+		property bool B { bool get(); void set(bool); }
 		property List<String^>^ Data { List<String^>^ get(); }
 
 		virtual event PropertyChangedEventHandler^ PropertyChanged;
@@ -36,5 +39,6 @@ namespace Ascii
 		int fontHeight;
 		String^ fileName;
 		double scale;
+		bool r, g, b;
 	};
 }

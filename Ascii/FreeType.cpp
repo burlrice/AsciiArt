@@ -13,6 +13,7 @@
 #include <numeric>
 #include <msclr/marshal_cppstd.h>
 #include <FreeImagePlus.h>
+#include <sstream>
 
 using namespace Ascii;
 using namespace msclr::interop;
@@ -25,7 +26,7 @@ void FreeType::Init()
 
 	FT_Init_FreeType(library.get());
 	fonts = gcnew Dictionary<String^, List<String^>^>();
-	files = gcnew Dictionary<Tuple<String^, String^>^, String^>();
+	files = gcnew Dictionary<Tuple<String^, String^>^, Tuple<String^, double>^>();
 
 	for (const auto& file : std::filesystem::directory_iterator{ "C:\\Windows\\Fonts" })
 	{
@@ -33,7 +34,7 @@ void FreeType::Init()
 
 		if (FT_New_Face(*library.get(), file.path().string().c_str(), 0, face.get()) == FT_Err_Ok)
 		{
-			std::set<unsigned int> advance;
+			std::set<double> ratios;
 
 			FT_Set_Pixel_Sizes(*face.get(), 32, 32);
 
@@ -45,11 +46,11 @@ void FreeType::Init()
 					FT_GlyphSlot slot = (*face)->glyph;
 					FT_Render_Glyph((*face)->glyph, FT_RENDER_MODE_MONO);
 					
-					advance.insert(slot->advance.x);
+					ratios.insert(slot->linearHoriAdvance / (double)slot->linearVertAdvance);
 				}
 			}
 
-			if (advance.size() == 1)
+			if (ratios.size () == 1)
 			{
 				auto family = marshal_as<String^>((*face)->family_name);
 				auto style = marshal_as<String^>((*face)->style_name);
@@ -62,7 +63,9 @@ void FreeType::Init()
 				if (!fonts[family]->Contains(style))
 				{
 					fonts[family]->Add(style);
-					files->Add(gcnew Tuple<String^, String^>(family, style), marshal_as<String^>(file.path().string()));
+					files->Add(
+						gcnew Tuple<String^, String^>(family, style),
+						gcnew Tuple<String^, double>(marshal_as<String^>(file.path().string()), *ratios.begin()));
 				}
 			}
 		}
@@ -98,6 +101,21 @@ size_t Ascii::Cpp::CountBits(const FT_Bitmap& bitmap)
 	return result;
 }
 
+double Ascii::Cpp::GetFontAspectRatio(const std::string& family, const std::string& style)
+{
+	try
+	{
+		Tuple<String^, String^> key(marshal_as<String^>(family), marshal_as<String^>(style));
+		
+		return FreeType::files[% key]->Item2;
+	}
+	catch (KeyNotFoundException^ e)
+	{
+	}
+
+	return 1.0;
+}
+
 std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset)
 {
 	std::map<double, char> result;
@@ -105,7 +123,7 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 	try
 	{
 		Tuple<String^, String^> key(marshal_as<String^>(family), marshal_as<String^>(style));
-		auto file = marshal_as<std::string>(FreeType::files[% key]);
+		auto file = marshal_as<std::string>(FreeType::files[% key]->Item1);
 		std::unique_ptr<FT_Library, std::function<void(FT_Library*)>> library(new FT_Library(), [](auto* p) { FT_Done_FreeType(*p); });
 
 		FT_Init_FreeType(library.get());
@@ -133,7 +151,6 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 	}
 	catch (KeyNotFoundException^ e)
 	{
-
 	}
 	
 	return result;
