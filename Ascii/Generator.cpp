@@ -35,10 +35,10 @@ Generator::Generator()
 	fontStyle = gcnew String("Regular");
 	fontHeight = 22;
 	fileName = gcnew String("");
-	scale = 0.1;
-	r = true;
+	scale = 0.08;
+	r = false;
 	g = true; 
-	b = true;
+	b = false;
 }
 
 Generator::~Generator()

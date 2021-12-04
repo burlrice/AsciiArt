@@ -7,8 +7,11 @@
     Title="MainWindow"
     Width="1200"
     Height="450"
+    AllowDrop="True"
     DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    Drop="OnDrop"
     mc:Ignorable="d">
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />

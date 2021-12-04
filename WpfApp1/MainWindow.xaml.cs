@@ -59,18 +59,30 @@ namespace WpfApp1
 
         void ReloadImage(string fileName)
         {
-            var img = new BitmapImage();
-            var max = new Size(640, 480);
+            try
+            {
+                var img = new BitmapImage();
+                var max = new Size(640, 480);
 
-            img.BeginInit();
-            img.UriSource = new Uri(fileName);
-            img.EndInit();
+                img.BeginInit();
+                img.UriSource = new Uri(fileName);
+                img.EndInit();
 
-            var scale = Math.Max(max.Width / img.PixelWidth, max.Height / img.PixelHeight);
+                var scale = Math.Max(max.Width / img.PixelWidth, max.Height / img.PixelHeight);
 
-            Image = new TransformedBitmap(img, new ScaleTransform(scale, scale));
-            Generator.FileName = fileName;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
+                Image = new TransformedBitmap(img, new ScaleTransform(scale, scale));
+                Generator.FileName = fileName;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
+            }
+            catch (Exception ex) { }
+        }
+
+        private void OnDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                ReloadImage(((string[])e.Data.GetData(DataFormats.FileDrop)).FirstOrDefault());
+            }
         }
     }
 }
