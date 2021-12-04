@@ -6,4 +6,4 @@ Uses:
 * https://github.com/WinMerge/freeimage
 * https://github.com/freetype
 
-(MainWindow.png)
+![Screenshot](MainWindow.png)
