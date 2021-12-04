@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Ascii;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,34 +20,34 @@ namespace WpfApp1
     {
         Dictionary<string, List<string>> fonts { get; set; } = Ascii.FreeType.FixedWidthFonts;
         public List<string> Fonts => fonts.Select(f => f.Key).ToList().OrderBy(s => s).ToList();
-        public string SelectedFont { get; set; }
-        public string Data { get; set; }
+        public Generator Generator { get; set; } = new Generator();
+        public string Data => string.Join("\r\n", Generator.Data);
 
-        public string FileName { get; set; } = string.Join("\\", 
-            Assembly.GetExecutingAssembly().Location.
-            Split('\\').TakeWhile(s => s != "bin")
-            .Union(new List<string>() { "Starry night.png" }));
+        public BitmapSource? Image { get; set; }
 
-        public BitmapSource Image { get; set; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainWindow()
         {
+            var fileName = string.Join("\\",
+                Assembly.GetExecutingAssembly().Location.
+                Split('\\').TakeWhile(s => s != "bin")
+                .Union(new List<string>() { "Starry night.png" }));
+
             InitializeComponent();
-            SelectedFont = Fonts.Where(f => f == "Courier New").FirstOrDefault();
-            PropertyChanged(this, new PropertyChangedEventArgs(nameof(SelectedFont)));
-            ReloadImage(FileName);
+            Generator.FontFamily = Fonts.Where(f => f == "Courier New").FirstOrDefault();
+            Generator.FontStyle = fonts.Where(f => f.Key == Generator.FontFamily).Select(f => f.Value.FirstOrDefault()).FirstOrDefault();
+            Generator.PropertyChanged += (sender, e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Data)));
+            ReloadImage(fileName);
         }
 
         private void OnBrowse(object sender, RoutedEventArgs e)
         {
-            var title = this.FileName.Split('\\').LastOrDefault();
-
+            var title = Generator.FileName.Split('\\').LastOrDefault();
             var dialog = new OpenFileDialog() 
             {
-                InitialDirectory = string.Join("\\", this.FileName.Split('\\').TakeWhile(s => s != title)),
-                FileName = this.FileName, 
+                InitialDirectory = string.Join("\\", Generator.FileName.Split('\\').TakeWhile(s => s != title)),
+                FileName = Generator.FileName, 
                 Filter = "Image files|*.bmp;*.jpg;*.png;"
             };
 
@@ -71,15 +72,8 @@ namespace WpfApp1
 
             Image = new TransformedBitmap(img, new ScaleTransform(cx, cy));
 
-            FileName = fileName;
-            PropertyChanged(this, new PropertyChangedEventArgs(nameof(FileName)));
-            PropertyChanged(this, new PropertyChangedEventArgs(nameof(Image)));
-        }
-
-        private void OnFontSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Data = SelectedFont;
-            PropertyChanged(this, new PropertyChangedEventArgs(nameof(Data)));
+            Generator.FileName = fileName;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
         }
     }
 }

@@ -12,6 +12,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid>
@@ -31,14 +32,13 @@
                 Grid.Column="1"
                 Margin="5"
                 ItemsSource="{Binding Fonts}"
-                SelectedItem="{Binding SelectedFont}"
-                SelectionChanged="OnFontSelectionChanged" />
+                SelectedItem="{Binding Generator.FontFamily}" />
 
             <TextBox
                 Grid.Column="2"
                 Margin="5"
                 IsEnabled="False"
-                Text="{Binding FileName}"
+                Text="{Binding Generator.FileName}"
                 TextWrapping="WrapWithOverflow" />
             <Button
                 Grid.Column="3"
@@ -46,10 +46,17 @@
                 Content="Browse..." />
 
         </Grid>
-        <Grid Grid.Row="1" Background="Black">
+
+        <Slider
+            Grid.Row="1"
+            Maximum="2.0"
+            Minimum="0.01"
+            Value="{Binding Generator.Scale}" />
+
+        <Grid Grid.Row="2" Background="Black">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Image
@@ -60,7 +67,8 @@
                     Source="{Binding Image}" />
                 <TextBlock
                     Grid.Column="1"
-                    Background="DarkBlue"
+                    Background="Transparent"
+                    IsEnabled="False"
                     FontFamily="{Binding ElementName=cbFont, Path=SelectedValue}"
                     Foreground="White"
                     Text="{Binding Data}" />
