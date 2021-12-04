@@ -74,14 +74,20 @@ namespace WpfApp1
                 Generator.FileName = fileName;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
             }
-            catch (Exception ex) { }
+            catch (Exception ex) 
+            {
+                System.Diagnostics.Trace.WriteLine(ex.ToString());
+            }
         }
 
         private void OnDrop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                ReloadImage(((string[])e.Data.GetData(DataFormats.FileDrop)).FirstOrDefault());
+                if (e.Data.GetData(DataFormats.FileDrop) is string[] data)
+                {
+                    ReloadImage(data.FirstOrDefault() ?? "");
+                }
             }
         }
     }

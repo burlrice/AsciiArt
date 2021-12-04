@@ -3,7 +3,7 @@
 #include <string>
 #include <map>
 
-#define generic GenericFromFreeTypeLibrary
+#define generic _generic
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #undef generic

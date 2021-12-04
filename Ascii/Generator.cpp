@@ -8,11 +8,6 @@
 #include <msclr/marshal_cppstd.h>
 #include <FreeImagePlus.h>
 
-#define generic GenericFromFreeTypeLibrary
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#undef generic
-
 using namespace Ascii;
 using namespace msclr::interop;
 using namespace System;
@@ -140,9 +135,6 @@ List<String^>^ Generator::Data::get()
 			const auto range = weights.rbegin()->first - weights.begin()->first;
 			auto cx = img.getWidth() * scale / aspect;
 			auto cy = img.getHeight() * scale * aspect;
-
-			auto width = img.getWidth(); // TODO: rem
-			auto height = img.getHeight();// TODO: rem
 
 			img.rescale((int)std::round(cx), (int)std::round(cy), FILTER_BOX);
 
