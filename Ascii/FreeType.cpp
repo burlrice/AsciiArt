@@ -21,6 +21,7 @@ using namespace System;
 
 void FreeType::Init()
 {
+	constexpr int height = 32;
 	auto charset = marshal_as<std::string> ((gcnew Generator())->Charset);
 	std::unique_ptr<FT_Library, std::function<void(FT_Library*)>> library(new FT_Library(), [](auto* p) { FT_Done_FreeType(*p); });
 
@@ -34,9 +35,9 @@ void FreeType::Init()
 
 		if (FT_New_Face(*library.get(), file.path().string().c_str(), 0, face.get()) == FT_Err_Ok)
 		{
-			std::set<double> ratios;
+			std::set<std::pair<long, long>> advances;
 
-			FT_Set_Pixel_Sizes(*face.get(), 32, 32);
+			FT_Set_Pixel_Sizes(*face.get(), height, height);
 
 			for (const auto& c : charset)
 			{
@@ -46,26 +47,31 @@ void FreeType::Init()
 					FT_GlyphSlot slot = (*face)->glyph;
 					FT_Render_Glyph((*face)->glyph, FT_RENDER_MODE_MONO);
 					
-					ratios.insert(slot->linearHoriAdvance / (double)slot->linearVertAdvance);
+					advances.insert(std::make_pair(slot->metrics.horiAdvance / 64, slot->metrics.vertAdvance / 64));
 				}
 			}
 
-			if (ratios.size () == 1)
+			if (advances.size() == 1)
 			{
 				auto family = marshal_as<String^>((*face)->family_name);
 				auto style = marshal_as<String^>((*face)->style_name);
+				auto aspectRatio = advances.begin()->second / (double)advances.begin()->first;
 
-				if (!fonts->ContainsKey(family))
+				if (aspectRatio > 0.5)
 				{
-					fonts->Add(family, gcnew List<String^>());
-				}
+					if (!fonts->ContainsKey(family))
+					{
+						fonts->Add(family, gcnew List<String^>());
+					}
 
-				if (!fonts[family]->Contains(style))
-				{
-					fonts[family]->Add(style);
-					files->Add(
-						gcnew Tuple<String^, String^>(family, style),
-						gcnew Tuple<String^, double>(marshal_as<String^>(file.path().string()), *ratios.begin()));
+					if (!fonts[family]->Contains(style))
+					{
+
+						fonts[family]->Add(style);
+						files->Add(
+							gcnew Tuple<String^, String^>(family, style),
+							gcnew Tuple<String^, double>(marshal_as<String^>(file.path().string()), aspectRatio));
+					}
 				}
 			}
 		}
@@ -101,23 +107,21 @@ size_t Ascii::Cpp::CountBits(const FT_Bitmap& bitmap)
 	return result;
 }
 
-double Ascii::Cpp::GetFontAspectRatio(const std::string& family, const std::string& style)
-{
-	try
-	{
-		Tuple<String^, String^> key(marshal_as<String^>(family), marshal_as<String^>(style));
-		
-		return FreeType::files[% key]->Item2;
-	}
-	catch (KeyNotFoundException^ e)
-	{
-	}
-
-	return 1.0;
-}
-
 std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset)
 {
+	using Key = std::tuple<std::string, std::string, int>;
+	using Value = std::map<double, char>;
+
+	static std::map<Key, Value> cache;
+
+	auto key = Key(family, style, height);
+	auto find = cache.find(key);
+
+	if (find != cache.end())
+	{
+		return find->second;
+	}
+
 	std::map<double, char> result;
 
 	try
@@ -142,7 +146,7 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 					FT_GlyphSlot slot = (*face)->glyph;
 					FT_Render_Glyph((*face)->glyph, FT_RENDER_MODE_MONO);
 
-					double weight = CountBits(slot->bitmap) / (double)(height * height);
+					double weight = CountBits(slot->bitmap) / (double)(slot->metrics.horiAdvance * slot->metrics.vertAdvance / 64);
 
 					result.emplace(weight, c);
 				}
@@ -153,5 +157,7 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 	{
 	}
 	
+	cache[key] = result;
+
 	return result;
 }

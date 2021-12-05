@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
@@ -18,8 +19,33 @@ namespace WpfApp1
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        List<string> excludeFonts => new List<string>()
+        {
+            "Code39AzaleaNarrow1",
+            "Code39AzaleaNarrow2",
+            "Code39AzaleaNarrow3",
+            "Code39AzaleaRegular1",
+            "Code39AzaleaRegular2",
+            "Code39AzaleaRegular3",
+            "Code39AzaleaWide1",
+            "Code39AzaleaWide2",
+            "Code39AzaleaWide3",
+            "DFKai-SB",
+            "FangSong",
+            "HoloLens MDL2 Assets",
+            "KaiTi",
+            "MingLiU",
+            "Miriam Fixed",
+            "MS Mincho",
+            "Rod",
+            "SamsungOneUIKorean",
+            "Segoe MDL2 Assets",
+            "SimHei",
+            "Simplified Arabic Fixed",
+        };
+
         Dictionary<string, List<string>> fonts { get; set; } = Ascii.FreeType.FixedWidthFonts;
-        public List<string> Fonts => fonts.Select(f => f.Key).ToList().OrderBy(s => s).ToList();
+        public List<string> Fonts => fonts.Select(f => f.Key).Where(f => !excludeFonts.Contains(f)).ToList().OrderBy(s => s).ToList();
         public Generator Generator { get; set; } = new Generator();
         public string Data => string.Join("\r\n", Generator.Data);
 
@@ -37,7 +63,19 @@ namespace WpfApp1
             InitializeComponent();
             Generator.FontFamily = Fonts.Where(f => f == "Courier New").FirstOrDefault();
             Generator.FontStyle = fonts.Where(f => f.Key == Generator.FontFamily).Select(f => f.Value.FirstOrDefault()).FirstOrDefault();
-            Generator.PropertyChanged += (sender, e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Data)));
+
+            Generator.PropertyChanged += (sender, e) => 
+            {
+                if (e.PropertyName == nameof(Generator.FontFamily) || e.PropertyName == nameof(Generator.FontStyle) || Generator.FontAspectRatio == 1.0)
+                {
+                    var size = MeasureString("12345\n12345\n12345\n12345\n12345");
+                
+                    Generator.FontAspectRatio = size.Width / size.Height;
+                }
+
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Data)));
+            };
+
             ReloadImage(fileName);
         }
 
@@ -55,6 +93,21 @@ namespace WpfApp1
             {
                 ReloadImage(dialog.FileName);
             }
+        }
+
+        private Size MeasureString(string candidate)
+        {
+            var formattedText = new FormattedText(
+                candidate,
+                CultureInfo.CurrentCulture,
+                FlowDirection.LeftToRight,
+                new Typeface(Generator.FontFamily),
+                Generator.FontHeight,
+                Brushes.Black,
+                new NumberSubstitution(),
+                1);
+
+            return new Size(formattedText.Width, formattedText.Height);
         }
 
         void ReloadImage(string fileName)

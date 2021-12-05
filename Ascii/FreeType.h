@@ -31,6 +31,5 @@ namespace Ascii
 	{
 		size_t CountBits(const FT_Bitmap& bitmap);
 		std::map<double, char> GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset);
-		double GetFontAspectRatio(const std::string& family, const std::string& style);
 	};
 }

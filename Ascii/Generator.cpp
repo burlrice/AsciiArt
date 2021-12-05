@@ -5,6 +5,7 @@
 #include <limits>
 #include <cmath>
 #include <algorithm>
+#include <sstream>
 #include <msclr/marshal_cppstd.h>
 #include <FreeImagePlus.h>
 
@@ -31,6 +32,7 @@ Generator::Generator()
 	fontHeight = 22;
 	fileName = gcnew String("");
 	scale = 0.08;
+	fontAspectRatio = 1.0;
 	r = false;
 	g = true; 
 	b = false;
@@ -57,9 +59,12 @@ String^ Generator::FontStyle::get()
 
 void Generator::FontStyle::set(String^ value)
 {
-	fontStyle = value;
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("FontStyle"));
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	if (fontStyle != value)
+	{
+		fontStyle = value;
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("FontStyle"));
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	}
 }
 
 int Generator::FontHeight::get()
@@ -69,9 +74,12 @@ int Generator::FontHeight::get()
 
 void Generator::FontHeight::set(int value)
 {
-	fontHeight = value;
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("FontHeight"));
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	if (fontHeight != value)
+	{
+		fontHeight = value;
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("FontHeight"));
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	}
 }
 
 String^ Generator::FontFamily::get()
@@ -83,10 +91,13 @@ void Generator::FontFamily::set(String^ value)
 {
 	if (FreeType::fonts->ContainsKey(value))
 	{
-		fontFamily = value;
-		PropertyChanged(this, gcnew PropertyChangedEventArgs("FontFamily"));
-		PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
-		FontStyle = System::Linq::Enumerable::FirstOrDefault(FreeType::fonts[value]);
+		if (fontFamily != value)
+		{
+			fontFamily = value;
+			PropertyChanged(this, gcnew PropertyChangedEventArgs("FontFamily"));
+			PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+			FontStyle = System::Linq::Enumerable::FirstOrDefault(FreeType::fonts[value]);
+		}
 	}
 }
 
@@ -97,9 +108,12 @@ String^ Generator::FileName::get()
 
 void Generator::FileName::set(String^ value)
 {
-	fileName = value;
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("FileName"));
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	if (fileName != value)
+	{
+		fileName = value;
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("FileName"));
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	}
 }
 
 double Generator::Scale::get()
@@ -109,9 +123,24 @@ double Generator::Scale::get()
 
 void Generator::Scale::set(double value)
 {
-	scale = std::clamp(value, 0.01, 2.0);
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("Scale"));
-	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	value = std::clamp(value, 0.01, 2.0);
+
+	if (scale != value)
+	{
+		scale = value;
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("Scale"));
+		PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+	}
+}
+
+double Generator::FontAspectRatio::get()
+{
+	return fontAspectRatio;
+}
+
+void Generator::FontAspectRatio::set(double value)
+{
+	fontAspectRatio = value;
 }
 
 List<String^>^ Generator::Data::get()
@@ -127,14 +156,13 @@ List<String^>^ Generator::Data::get()
 
 		const auto maxSize = std::pair(640u, 480u);
 		const auto weights = Cpp::GetCharWeights(family, style, FontHeight, charset);
-		auto aspect = Cpp::GetFontAspectRatio(family, style);
 
 		if (weights.size())
 		{
 			const auto maxBits = std::pow(2, sizeof(RGBQUAD::rgbRed) * CHAR_BIT);
 			const auto range = weights.rbegin()->first - weights.begin()->first;
-			auto cx = img.getWidth() * scale / aspect;
-			auto cy = img.getHeight() * scale * aspect;
+			auto cx = img.getWidth() * scale / fontAspectRatio;
+			auto cy = img.getHeight() * scale;
 
 			img.rescale((int)std::round(cx), (int)std::round(cy), FILTER_BOX);
 

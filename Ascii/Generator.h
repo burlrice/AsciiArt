@@ -24,6 +24,7 @@ namespace Ascii
 		property bool R { bool get(); void set(bool); }
 		property bool G { bool get(); void set(bool); }
 		property bool B { bool get(); void set(bool); }
+		property double FontAspectRatio { double get(); void set(double); }
 		property List<String^>^ Data { List<String^>^ get(); }
 
 		virtual event PropertyChangedEventHandler^ PropertyChanged;
@@ -38,7 +39,7 @@ namespace Ascii
 		String^ fontStyle;
 		int fontHeight;
 		String^ fileName;
-		double scale;
+		double scale, fontAspectRatio;
 		bool r, g, b;
 	};
 }
