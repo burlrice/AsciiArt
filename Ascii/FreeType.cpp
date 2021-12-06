@@ -107,10 +107,10 @@ size_t Ascii::Cpp::CountBits(const FT_Bitmap& bitmap)
 	return result;
 }
 
-std::map<int, char> Ascii::Cpp::GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset)
+std::array<char, 256> Ascii::Cpp::GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset)
 {
 	using Key = std::tuple<std::string, std::string, int>;
-	using Value = std::map<int, char>;
+	using Value = std::array<char, 256>;
 
 	static std::map<Key, Value> cache;
 

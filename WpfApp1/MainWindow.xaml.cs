@@ -110,7 +110,7 @@ namespace WpfApp1
                 img.UriSource = new Uri(fileName);
                 img.EndInit();
 
-                var scale = Math.Max(max.Width / img.PixelWidth, max.Height / img.PixelHeight);
+                var scale = Math.Min(1, Math.Max(max.Width / img.PixelWidth, max.Height / img.PixelHeight));
 
                 Image = new TransformedBitmap(img, new ScaleTransform(scale, scale));
                 Generator.FileName = fileName;

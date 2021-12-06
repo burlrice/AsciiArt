@@ -163,6 +163,7 @@ List<String^>^ Generator::Data::get()
 			auto cy = img.getHeight() * scale;
 
 			img.rescale((int)std::round(cx), (int)std::round(cy), FILTER_BOX);
+			img.convertTo32Bits();
 
 			for (auto y = (int)img.getHeight(); y >= 0; y--)
 			{
@@ -176,7 +177,7 @@ List<String^>^ Generator::Data::get()
 
 					auto index = (r ? rgb.rgbRed : 0) | (g ? rgb.rgbGreen : 0) | (b ? rgb.rgbBlue : 0);
 
-					line[x] = weights.at(index);
+					line[x] = weights[index];
 				}
 
 				result->Add(marshal_as<String^>(line));

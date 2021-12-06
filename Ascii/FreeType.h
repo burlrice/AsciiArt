@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <array>
 
 #define generic _generic
 #include <ft2build.h>
@@ -30,6 +30,6 @@ namespace Ascii
 	namespace Cpp
 	{
 		size_t CountBits(const FT_Bitmap& bitmap);
-		std::map<int, char> GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset);
+		std::array<char, 256> GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset);
 	};
 }
