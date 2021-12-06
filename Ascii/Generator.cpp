@@ -159,8 +159,6 @@ List<String^>^ Generator::Data::get()
 
 		if (weights.size())
 		{
-			const auto maxBits = std::pow(2, sizeof(RGBQUAD::rgbRed) * CHAR_BIT);
-			const auto range = weights.rbegin()->first - weights.begin()->first;
 			auto cx = img.getWidth() * scale / fontAspectRatio;
 			auto cy = img.getHeight() * scale;
 
@@ -176,17 +174,9 @@ List<String^>^ Generator::Data::get()
 
 					img.getPixelColor(x, y, &rgb);
 
-					double weight = ((
-						(r ? rgb.rgbRed : 0) | 
-						(g ? rgb.rgbGreen : 0) | 
-						(b ? rgb.rgbBlue : 0)
-						) / maxBits) * range;
+					auto index = (r ? rgb.rgbRed : 0) | (g ? rgb.rgbGreen : 0) | (b ? rgb.rgbBlue : 0);
 
-					auto low = weights.lower_bound(weight);
-					auto high = weights.upper_bound(weight);
-					auto iterator = (high == weights.cend()) ? low : (*low > *high ? low : high);
-
-					line[x] = iterator->second;
+					line[x] = weights.at(index);
 				}
 
 				result->Add(marshal_as<String^>(line));

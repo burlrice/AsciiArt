@@ -107,10 +107,10 @@ size_t Ascii::Cpp::CountBits(const FT_Bitmap& bitmap)
 	return result;
 }
 
-std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset)
+std::map<int, char> Ascii::Cpp::GetCharWeights(const std::string& family, const std::string& style, int height, const std::string& charset)
 {
 	using Key = std::tuple<std::string, std::string, int>;
-	using Value = std::map<double, char>;
+	using Value = std::map<int, char>;
 
 	static std::map<Key, Value> cache;
 
@@ -122,7 +122,8 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 		return find->second;
 	}
 
-	std::map<double, char> result;
+	Value result;
+	std::map<double, char> weights;
 
 	try
 	{
@@ -148,7 +149,12 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 
 					double weight = CountBits(slot->bitmap) / (double)(slot->metrics.horiAdvance * slot->metrics.vertAdvance / 64);
 
-					result.emplace(weight, c);
+					while (weights.find(weight) != weights.end())
+					{
+						weight += 0.0000000001;
+					}
+
+					weights[weight] = c;
 				}
 			}
 		}
@@ -156,7 +162,25 @@ std::map<double, char> Ascii::Cpp::GetCharWeights(const std::string& family, con
 	catch (KeyNotFoundException^ e)
 	{
 	}
-	
+
+	auto range = weights.rbegin()->first - weights.begin()->first;
+	auto getIndex = [&](auto i) { return (int)std::round(i->first * 255 / range); };
+
+	for (auto current = weights.begin(); current != weights.end(); ++current)
+	{
+		auto next = current;
+		
+		++next;
+
+		auto begin = getIndex(current);
+		auto end = next != weights.end() ? getIndex(next) : 256;
+
+		for (auto i = begin; i < end; i++)
+		{
+			result[i] = current->second;
+		}
+	}
+
 	cache[key] = result;
 
 	return result;
