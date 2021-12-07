@@ -1,14 +1,13 @@
 ﻿using Ascii;
+using GalaSoft.MvvmLight.Command;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -40,6 +39,8 @@ namespace WpfApp1
 
         public BitmapSource? Image { get; set; }
 
+        public RelayCommand Copy { get; set; }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public MainWindow()
@@ -49,6 +50,7 @@ namespace WpfApp1
                 Split('\\').TakeWhile(s => s != "bin")
                 .Union(new List<string>() { "800px-ISO_C++_Logo.svg.png" }));
 
+            Copy = new RelayCommand(OnCopyToClipboard);
             InitializeComponent();
             Generator.FontFamily = Fonts.Where(f => f == "Courier New").FirstOrDefault();
             Generator.FontStyle = fonts.Where(f => f.Key == Generator.FontFamily).Select(f => f.Value.FirstOrDefault()).FirstOrDefault();
@@ -115,6 +117,7 @@ namespace WpfApp1
                 Image = new TransformedBitmap(img, new ScaleTransform(scale, scale));
                 Generator.FileName = fileName;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
+                silderInputScale.Value = Math.Clamp(Image.PixelWidth, 10, max.Width);
             }
             catch (Exception ex) 
             {
@@ -131,6 +134,12 @@ namespace WpfApp1
                     ReloadImage(data.FirstOrDefault() ?? "");
                 }
             }
+        }
+
+        private void OnCopyToClipboard()
+        {
+            Clipboard.SetText(Data);
+            System.Diagnostics.Trace.WriteLine(Data);
         }
     }
 }

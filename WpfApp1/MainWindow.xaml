@@ -13,6 +13,13 @@
     Topmost="False"
     mc:Ignorable="d">
 
+    <Window.InputBindings>
+        <KeyBinding
+            Key="C"
+            Command="{Binding Path=Copy}"
+            Modifiers="Ctrl" />
+    </Window.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -27,6 +34,7 @@
                 <ColumnDefinition Width=".25*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
@@ -49,13 +57,25 @@
                 Click="OnBrowse"
                 Content="Browse..." />
 
-            <Label
-                Grid.Row="1"
-                HorizontalAlignment="Right"
-                Content="{Binding ElementName=sliderScale, Path=Value, Converter={StaticResource DoubleToPercentageConverter}}" />
+            <TextBlock Grid.Row="1" HorizontalAlignment="Right">
+                <Run Text="Input image width" />
+                <Run Text="{Binding ElementName=silderInputScale, Path=Value, StringFormat={}{0:#0}px}" />
+            </TextBlock>
             <Slider
-                x:Name="sliderScale"
+                Name="silderInputScale"
                 Grid.Row="1"
+                Grid.Column="1"
+                Maximum="{Binding Image.PixelWidth}"
+                Minimum="1"
+                SmallChange="1" />
+
+            <TextBlock Grid.Row="2" HorizontalAlignment="Right">
+                <Run Text="Output image scale" />
+                <Run Text="{Binding ElementName=sliderOutputScale, Path=Value, Converter={StaticResource DoubleToPercentageConverter}}" />
+            </TextBlock>
+            <Slider
+                x:Name="sliderOutputScale"
+                Grid.Row="2"
                 Grid.Column="1"
                 Maximum="1.0"
                 Minimum="0.01"
@@ -76,6 +96,12 @@
                 <CheckBox Margin="0,0,30,0" IsChecked="{Binding Generator.B}" />
             </StackPanel>
 
+            <!--<Button
+                Grid.Row="1"
+                Grid.RowSpan="2"
+                Grid.Column="3"
+                Click="OnCopyToClipboard"
+                Content="Copy to clipboard" />-->
         </Grid>
 
         <Grid Grid.Row="2" Background="Black">
@@ -85,18 +111,21 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Image
-                    Width="{Binding Image.PixelWidth}"
+                    Grid.Row="1"
+                    Width="{Binding ElementName=silderInputScale, Path=Value}"
                     Height="{Binding Image.PixelHeight}"
                     Margin="10"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Source="{Binding Image}" />
+                    Source="{Binding Image}"
+                    Stretch="Uniform" />
                 <TextBlock
+                    x:Name="txtData"
                     Grid.Column="1"
                     Background="Transparent"
                     FontFamily="{Binding ElementName=cbFont, Path=SelectedValue}"
                     Foreground="White"
-                    IsEnabled="False"
+                    IsEnabled="True"
                     Text="{Binding Data}" />
             </Grid>
         </Grid>
