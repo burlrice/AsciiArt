@@ -40,6 +40,7 @@ namespace WpfApp1
         public BitmapSource? Image { get; set; }
 
         public RelayCommand Copy { get; set; }
+        public RelayCommand Open { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -51,6 +52,7 @@ namespace WpfApp1
                 .Union(new List<string>() { "800px-ISO_C++_Logo.svg.png" }));
 
             Copy = new RelayCommand(OnCopyToClipboard);
+            Open = new RelayCommand(() => OnBrowse(null, null));
             InitializeComponent();
             Generator.FontFamily = Fonts.Where(f => f == "Courier New").FirstOrDefault();
             Generator.FontStyle = fonts.Where(f => f.Key == Generator.FontFamily).Select(f => f.Value.FirstOrDefault()).FirstOrDefault();

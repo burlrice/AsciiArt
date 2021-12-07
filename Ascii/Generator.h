@@ -24,6 +24,7 @@ namespace Ascii
 		property bool R { bool get(); void set(bool); }
 		property bool G { bool get(); void set(bool); }
 		property bool B { bool get(); void set(bool); }
+		property bool Invert { bool get(); void set(bool); }
 		property double FontAspectRatio { double get(); void set(double); }
 		property List<String^>^ Data { List<String^>^ get(); }
 
@@ -40,6 +41,6 @@ namespace Ascii
 		int fontHeight;
 		String^ fileName;
 		double scale, fontAspectRatio;
-		bool r, g, b;
+		bool r, g, b, invert;
 	};
 }

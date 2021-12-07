@@ -164,6 +164,11 @@ List<String^>^ Generator::Data::get()
 
 			img.rescale((int)std::round(cx), (int)std::round(cy), FILTER_BOX);
 			img.convertTo32Bits();
+			
+			if (!Invert)
+			{
+				img.invert();
+			}
 
 			for (auto y = (int)img.getHeight(); y >= 0; y--)
 			{
@@ -221,5 +226,17 @@ void Generator::B::set(bool value)
 {
 	b = value;
 	PropertyChanged(this, gcnew PropertyChangedEventArgs("B"));
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
+}
+
+bool Generator::Invert::get()
+{
+	return invert;
+}
+
+void Generator::Invert::set(bool value)
+{
+	invert = value;
+	PropertyChanged(this, gcnew PropertyChangedEventArgs("Invert"));
 	PropertyChanged(this, gcnew PropertyChangedEventArgs("Data"));
 }
